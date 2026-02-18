@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Money Tracker</title>
+<style>
+body{font-family:-apple-system;margin:20px}
+.card{border:1px solid #ddd;border-radius:12px;padding:12px;margin:10px 0}
+.big{font-size:22px;font-weight:bold}
+button{padding:10px;margin-top:10px}
+</style>
+</head>
+<body>
+
+<h2>压岁钱三账户</h2>
+
+<div class="card">
+Save: <span class="big" id="save">0</span> ¥
+</div>
+<div class="card">
+Wish: <span class="big" id="wish">0</span> ¥
+</div>
+<div class="card">
+Give: <span class="big" id="give">0</span> ¥
+</div>
+
+<h3>添加记录</h3>
+
+<select id="acct">
+<option value="save">Save</option>
+<option value="wish">Wish</option>
+<option value="give">Give</option>
+</select>
+
+<select id="type">
+<option value="in">存入 +</option>
+<option value="out">支出 -</option>
+</select>
+
+<input id="amt" placeholder="金额">
+<button onclick="add()">保存</button>
+
+<script>
+let data=JSON.parse(localStorage.getItem("money")||'{"save":0,"wish":0,"give":0}');
+function render(){
+save.textContent=data.save;
+wish.textContent=data.wish;
+give.textContent=data.give;
+}
+render();
+function add(){
+let a=acct.value,t=type.value,m=Number(amt.value);
+if(!m)return;
+if(t=="in")data[a]+=m; else data[a]-=m;
+localStorage.setItem("money",JSON.stringify(data));
+render();
+}
+</script>
+
+</body>
+</html>
