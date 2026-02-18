@@ -1,62 +1,536 @@
 <!doctype html>
-<html>
+<html lang="zh-Hans">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Money Tracker</title>
-<style>
-body{font-family:-apple-system;margin:20px}
-.card{border:1px solid #ddd;border-radius:12px;padding:12px;margin:10px 0}
-.big{font-size:22px;font-weight:bold}
-button{padding:10px;margin-top:10px}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Yoyi Money Tracker</title>
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --text:#111827;
+      --muted:#6b7280;
+      --line:#e5e7eb;
+      --good:#16a34a;
+      --bad:#dc2626;
+      --btn:#111827;
+      --btnText:#ffffff;
+      --chip:#f3f4f6;
+      --shadow: 0 10px 25px rgba(0,0,0,.08);
+      --radius:16px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Hiragino Sans GB","Noto Sans CJK SC","Microsoft YaHei",Arial,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+    header{
+      padding:16px 16px 8px;
+      position:sticky; top:0;
+      background:linear-gradient(to bottom, rgba(246,247,251,.95), rgba(246,247,251,.75));
+      backdrop-filter: blur(8px);
+      z-index:2;
+    }
+    h1{margin:0; font-size:20px; display:flex; align-items:center; gap:8px}
+    .sub{color:var(--muted); font-size:12px; margin-top:6px}
+    main{padding:12px 16px 28px; max-width:980px; margin:0 auto}
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap:12px;
+    }
+    @media (max-width: 860px){
+      .grid{grid-template-columns:1fr}
+    }
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:14px;
+      box-shadow: var(--shadow);
+    }
+    .pill{
+      display:inline-flex; align-items:center; gap:6px;
+      padding:6px 10px;
+      border-radius:999px;
+      background:var(--chip);
+      font-size:12px;
+      color:#111;
+      border:1px solid var(--line);
+    }
+    .bal{
+      font-size:28px;
+      font-weight:800;
+      margin-top:10px;
+      letter-spacing:.2px;
+    }
+    .hint{color:var(--muted); font-size:12px; margin-top:4px}
+    .row{display:grid; grid-template-columns: 1fr 1fr; gap:10px}
+    @media (max-width: 860px){ .row{grid-template-columns:1fr} }
+    label{display:block; font-size:12px; color:var(--muted); margin:10px 0 6px}
+    input, select, textarea{
+      width:100%;
+      padding:12px;
+      border:1px solid var(--line);
+      border-radius:12px;
+      font-size:15px;
+      background:#fff;
+      outline:none;
+    }
+    textarea{min-height:44px; resize:vertical}
+    .btns{display:flex; flex-wrap:wrap; gap:10px; margin-top:12px}
+    button{
+      border:0;
+      border-radius:12px;
+      padding:12px 14px;
+      font-size:15px;
+      cursor:pointer;
+    }
+    .primary{background:var(--btn); color:var(--btnText)}
+    .secondary{background:#fff; border:1px solid var(--line); color:var(--text)}
+    .danger{background:#fff; border:1px solid #fecaca; color:var(--bad)}
+    .small{padding:8px 10px; font-size:13px; border-radius:10px}
+    .msg{
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:12px;
+      background:#fff;
+      border:1px solid var(--line);
+      color:var(--muted);
+      font-size:13px;
+    }
+    .msg.good{border-color:#bbf7d0; color:#065f46}
+    .msg.bad{border-color:#fecaca; color:#7f1d1d}
+    table{width:100%; border-collapse:collapse; margin-top:10px}
+    th, td{border-bottom:1px solid var(--line); padding:10px 8px; font-size:13px; vertical-align:top}
+    th{color:var(--muted); text-align:left; font-weight:600}
+    td.right, th.right{text-align:right}
+    .tag{
+      display:inline-flex;
+      padding:3px 8px;
+      border-radius:999px;
+      background:var(--chip);
+      border:1px solid var(--line);
+      font-size:12px;
+      color:#111;
+      white-space:nowrap;
+    }
+    .amtIn{color:var(--good); font-weight:700}
+    .amtOut{color:var(--bad); font-weight:700}
+    .footerHint{color:var(--muted); font-size:12px; margin-top:10px}
+    .split{display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between}
+    .kpi{display:flex; gap:10px; flex-wrap:wrap}
+    .kpi .tag{background:#fff}
+  </style>
 </head>
 <body>
+<header>
+  <h1>🧸 Yoyi 的压岁钱小账本</h1>
+  <div class="sub">三账户：💰Save（未来）🎁Wish（愿望）❤️Give（帮助）｜数据保存在本机浏览器（建议偶尔导出 CSV 备份）</div>
+</header>
 
-<h2>压岁钱三账户</h2>
+<main>
+  <section class="grid">
+    <div class="card">
+      <span class="pill">💰 SAVE 储蓄</span>
+      <div class="bal" id="balSave">¥0</div>
+      <div class="hint">给未来的你：初中后再讨论怎么用也可以</div>
+    </div>
+    <div class="card">
+      <span class="pill">🎁 WISH 愿望</span>
+      <div class="bal" id="balWish">¥0</div>
+      <div class="hint">大愿望/礼物：可以和父母一起出</div>
+    </div>
+    <div class="card">
+      <span class="pill">❤️ GIVE 帮助</span>
+      <div class="bal" id="balGive">¥0</div>
+      <div class="hint">捐赠/帮助他人：可以父母配比</div>
+    </div>
+  </section>
 
-<div class="card">
-Save: <span class="big" id="save">0</span> ¥
-</div>
-<div class="card">
-Wish: <span class="big" id="wish">0</span> ¥
-</div>
-<div class="card">
-Give: <span class="big" id="give">0</span> ¥
-</div>
+  <section class="card" style="margin-top:12px">
+    <div class="split">
+      <div style="font-weight:800">✍️ 添加 / 修改 一笔记录</div>
+      <div class="kpi">
+        <span class="tag">📌 点“编辑”可以修改</span>
+        <span class="tag">🧮 会自动算余额</span>
+      </div>
+    </div>
 
-<h3>添加记录</h3>
+    <div class="row" style="margin-top:6px">
+      <div>
+        <label>账户</label>
+        <select id="acct">
+          <option value="save">💰 Save（储蓄）</option>
+          <option value="wish">🎁 Wish（愿望）</option>
+          <option value="give">❤️ Give（帮助）</option>
+        </select>
+      </div>
+      <div>
+        <label>类型</label>
+        <select id="type">
+          <option value="in">➕ 存入（+）</option>
+          <option value="out">➖ 支出（-）</option>
+        </select>
+      </div>
+      <div>
+        <label>金额（JPY）</label>
+        <input id="amt" type="number" inputmode="numeric" placeholder="例如 2000" />
+      </div>
+      <div>
+        <label>日期</label>
+        <input id="date" type="date" />
+      </div>
+    </div>
 
-<select id="acct">
-<option value="save">Save</option>
-<option value="wish">Wish</option>
-<option value="give">Give</option>
-</select>
+    <div class="row">
+      <div>
+        <label>分类（可选）</label>
+        <select id="cat">
+          <option value="">（不选也可以）</option>
+          <option value="donation">🎗️ 捐赠/公益</option>
+          <option value="gift">🎁 礼物</option>
+          <option value="toy">🧩 玩具/乐高</option>
+          <option value="trip">🧳 旅行/活动</option>
+          <option value="study">📚 学习/设备</option>
+          <option value="other">✨ 其他</option>
+        </select>
+      </div>
+      <div>
+        <label>备注（可选）</label>
+        <input id="note" type="text" placeholder="例如：学校捐款 / 生日礼物 / 乐高出资" />
+      </div>
+    </div>
 
-<select id="type">
-<option value="in">存入 +</option>
-<option value="out">支出 -</option>
-</select>
+    <div class="btns">
+      <button class="primary" id="btnSave" onclick="saveTx()">保存这一笔</button>
+      <button class="secondary" onclick="clearForm()">清空输入</button>
+      <button class="secondary" onclick="exportCSV()">导出CSV</button>
+      <button class="danger" onclick="resetAll()">清空所有数据（谨慎）</button>
+    </div>
 
-<input id="amt" placeholder="金额">
-<button onclick="add()">保存</button>
+    <div id="msg" class="msg" style="display:none"></div>
+  </section>
+
+  <section class="card" style="margin-top:12px">
+    <div class="split">
+      <div style="font-weight:800">📒 记录列表（最新在上面）</div>
+      <div class="footerHint">小技巧：想改一笔，点右侧“编辑”。不需要逐笔记“零花钱”，这里只管压岁钱三账户即可。</div>
+    </div>
+
+    <div style="overflow:auto">
+      <table>
+        <thead>
+          <tr>
+            <th style="min-width:110px">日期</th>
+            <th style="min-width:110px">账户</th>
+            <th style="min-width:80px">类型</th>
+            <th style="min-width:110px">分类</th>
+            <th>备注</th>
+            <th class="right" style="min-width:110px">金额</th>
+            <th class="right" style="min-width:140px">操作</th>
+          </tr>
+        </thead>
+        <tbody id="txBody"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
 
 <script>
-let data=JSON.parse(localStorage.getItem("money")||'{"save":0,"wish":0,"give":0}');
-function render(){
-save.textContent=data.save;
-wish.textContent=data.wish;
-give.textContent=data.give;
-}
-render();
-function add(){
-let a=acct.value,t=type.value,m=Number(amt.value);
-if(!m)return;
-if(t=="in")data[a]+=m; else data[a]-=m;
-localStorage.setItem("money",JSON.stringify(data));
-render();
-}
-</script>
+  const KEY = "yoyi_money_tracker_v2";
 
+  const acctEl = document.getElementById("acct");
+  const typeEl = document.getElementById("type");
+  const amtEl  = document.getElementById("amt");
+  const dateEl = document.getElementById("date");
+  const catEl  = document.getElementById("cat");
+  const noteEl = document.getElementById("note");
+  const msgEl  = document.getElementById("msg");
+  const btnSaveEl = document.getElementById("btnSave");
+
+  let editingId = null;
+
+  function todayISO(){
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth()+1).padStart(2,"0");
+    const dd = String(d.getDate()).padStart(2,"0");
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  function yen(n){
+    const sign = n < 0 ? "-" : "";
+    const v = Math.abs(Math.round(n));
+    return sign + "¥" + v.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  }
+
+  function acctName(a){
+    if(a==="save") return "💰 Save";
+    if(a==="wish") return "🎁 Wish";
+    return "❤️ Give";
+  }
+
+  function catName(c){
+    const map = {
+      "donation":"🎗️ 捐赠/公益",
+      "gift":"🎁 礼物",
+      "toy":"🧩 玩具/乐高",
+      "trip":"🧳 旅行/活动",
+      "study":"📚 学习/设备",
+      "other":"✨ 其他",
+      "":"—"
+    };
+    return map[c ?? ""] ?? "—";
+  }
+
+  function showMsg(text, kind=""){
+    msgEl.style.display = "block";
+    msgEl.className = "msg" + (kind ? (" " + kind) : "");
+    msgEl.textContent = text;
+    clearTimeout(showMsg._t);
+    showMsg._t = setTimeout(()=>{ msgEl.style.display="none"; }, 2600);
+  }
+
+  function load(){
+    const raw = localStorage.getItem(KEY);
+    if(!raw){
+      const init = { tx: [] };
+      localStorage.setItem(KEY, JSON.stringify(init));
+      return init;
+    }
+    try { return JSON.parse(raw); }
+    catch(e){
+      const init = { tx: [] };
+      localStorage.setItem(KEY, JSON.stringify(init));
+      return init;
+    }
+  }
+
+  function persist(data){
+    localStorage.setItem(KEY, JSON.stringify(data));
+  }
+
+  function calcBalances(tx){
+    const bal = {save:0,wish:0,give:0};
+    tx.forEach(t=>{
+      const amt = Number(t.amount)||0;
+      const delta = (t.type==="in") ? amt : -amt;
+      bal[t.acct] += delta;
+    });
+    return bal;
+  }
+
+  function render(){
+    const data = load();
+    const bal = calcBalances(data.tx);
+
+    document.getElementById("balSave").textContent = yen(bal.save);
+    document.getElementById("balWish").textContent = yen(bal.wish);
+    document.getElementById("balGive").textContent = yen(bal.give);
+
+    const tb = document.getElementById("txBody");
+    tb.innerHTML = "";
+
+    // newest first
+    const list = data.tx.slice().sort((a,b)=>{
+      if(a.date !== b.date) return b.date.localeCompare(a.date);
+      return (b.createdAt||"").localeCompare(a.createdAt||"");
+    });
+
+    list.forEach(t=>{
+      const tr = document.createElement("tr");
+      const isOut = t.type==="out";
+      const amtClass = isOut ? "amtOut" : "amtIn";
+      const sign = isOut ? "-" : "+";
+      tr.innerHTML = `
+        <td>${t.date}</td>
+        <td><span class="tag">${acctName(t.acct)}</span></td>
+        <td>${isOut ? "➖ 支出" : "➕ 存入"}</td>
+        <td><span class="tag">${catName(t.cat)}</span></td>
+        <td>${escapeHtml(t.note || "")}</td>
+        <td class="right ${amtClass}">${sign}${yen(Number(t.amount)||0).replace("¥","¥")}</td>
+        <td class="right">
+          <button class="secondary small" onclick="startEdit('${t.id}')">编辑</button>
+          <button class="danger small" onclick="deleteTx('${t.id}')">删除</button>
+        </td>
+      `;
+      tb.appendChild(tr);
+    });
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/&/g,"&amp;")
+      .replace(/</g,"&lt;").replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;").replace(/'/g,"&#039;");
+  }
+
+  function getForm(){
+    const acct = acctEl.value;
+    const type = typeEl.value;
+    const amount = Number(amtEl.value);
+    const date = dateEl.value || todayISO();
+    const cat = catEl.value || "";
+    const note = (noteEl.value || "").trim();
+
+    return {acct, type, amount, date, cat, note};
+  }
+
+  function clearForm(){
+    editingId = null;
+    acctEl.value = "save";
+    typeEl.value = "in";
+    amtEl.value = "";
+    dateEl.value = todayISO();
+    catEl.value = "";
+    noteEl.value = "";
+    btnSaveEl.textContent = "保存这一笔";
+    showMsg("已清空输入", "");
+  }
+
+  function saveTx(){
+    const data = load();
+    const f = getForm();
+
+    if(!f.amount || f.amount <= 0){
+      showMsg("请输入大于 0 的金额", "bad");
+      return;
+    }
+
+    // balance check for OUT
+    const bal = calcBalances(data.tx);
+    const after = bal[f.acct] + (f.type==="in" ? f.amount : -f.amount);
+    if(after < 0){
+      showMsg("余额不足，不能支出这笔金额。", "bad");
+      return;
+    }
+
+    if(editingId){
+      const idx = data.tx.findIndex(x=>x.id===editingId);
+      if(idx === -1){
+        showMsg("找不到要编辑的记录（可能已删除）", "bad");
+        editingId = null;
+        btnSaveEl.textContent = "保存这一笔";
+        return;
+      }
+
+      // Temporarily remove old record to re-check balance correctly
+      const old = data.tx[idx];
+      const txWithoutOld = data.tx.filter(x=>x.id!==editingId);
+      const bal2 = calcBalances(txWithoutOld);
+      const after2 = bal2[f.acct] + (f.type==="in" ? f.amount : -f.amount);
+      if(after2 < 0){
+        showMsg("修改后会导致余额不足，请调整金额或账户。", "bad");
+        return;
+      }
+
+      data.tx[idx] = {
+        ...old,
+        acct: f.acct,
+        type: f.type,
+        amount: Math.round(f.amount),
+        date: f.date,
+        cat: f.cat,
+        note: f.note
+      };
+      persist(data);
+      showMsg("已保存修改 ✅", "good");
+      editingId = null;
+      btnSaveEl.textContent = "保存这一笔";
+      render();
+      return;
+    }
+
+    // new record
+    const now = new Date();
+    const id = "tx_" + now.getTime() + "_" + Math.random().toString(16).slice(2);
+    data.tx.push({
+      id,
+      createdAt: now.toISOString(),
+      acct: f.acct,
+      type: f.type,
+      amount: Math.round(f.amount),
+      date: f.date,
+      cat: f.cat,
+      note: f.note
+    });
+    persist(data);
+    showMsg("已添加一笔 ✅", "good");
+    amtEl.value = "";
+    noteEl.value = "";
+    render();
+  }
+
+  function startEdit(id){
+    const data = load();
+    const t = data.tx.find(x=>x.id===id);
+    if(!t) return;
+
+    editingId = id;
+    acctEl.value = t.acct;
+    typeEl.value = t.type;
+    amtEl.value = t.amount;
+    dateEl.value = t.date || todayISO();
+    catEl.value = t.cat || "";
+    noteEl.value = t.note || "";
+    btnSaveEl.textContent = "保存修改";
+    showMsg("正在编辑：改完点“保存修改”", "");
+    window.scrollTo({top: 0, behavior: "smooth"});
+  }
+
+  function deleteTx(id){
+    const data = load();
+    const idx = data.tx.findIndex(x=>x.id===id);
+    if(idx === -1) return;
+    if(!confirm("确定删除这条记录吗？")) return;
+
+    data.tx.splice(idx,1);
+    persist(data);
+    if(editingId === id){
+      editingId = null;
+      btnSaveEl.textContent = "保存这一笔";
+    }
+    showMsg("已删除 🗑️", "");
+    render();
+  }
+
+  function exportCSV(){
+    const data = load();
+    const rows = [["date","account","type","amount_jpy","category","note"]];
+    data.tx.forEach(t=>{
+      rows.push([
+        t.date,
+        acctName(t.acct),
+        (t.type==="in" ? "in" : "out"),
+        t.amount,
+        catName(t.cat),
+        (t.note||"").replaceAll('"','""')
+      ]);
+    });
+    const csv = rows.map(r=>r.map(x=>`"${String(x)}"`).join(",")).join("\n");
+    const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "yoyi_money_tracker.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+    showMsg("已导出 CSV 📄", "good");
+  }
+
+  function resetAll(){
+    if(!confirm("确定要清空所有数据吗？此操作不可恢复。")) return;
+    localStorage.removeItem(KEY);
+    clearForm();
+    showMsg("已清空全部数据", "");
+    render();
+  }
+
+  // init
+  dateEl.value = todayISO();
+  render();
+</script>
 </body>
 </html>
