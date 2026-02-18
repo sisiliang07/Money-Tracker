@@ -6,7 +6,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Yoyi 的压岁钱小账本</title>
-  <!-- Optional: if you upload icon.png in the same folder, these will work -->
+
+  <!-- Optional: upload icon.png to same folder -->
   <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
   <link rel="icon" href="icon.png">
 
@@ -36,7 +37,7 @@
     }
 
     .wrap{
-      max-width: 720px; /* keep iPad looking like “mobile” */
+      max-width: 820px; /* a bit wider for desktop/iPad */
       margin: 0 auto;
       padding: 18px 16px 44px;
     }
@@ -67,31 +68,56 @@
       box-shadow: var(--shadow);
     }
 
-    .balances{
+    /* NEW: balances as 3 blocks */
+    .balGrid{
       margin-top: 14px;
-      padding: 18px 16px;
+      display:grid;
+      gap: 12px;
+      grid-template-columns: 1fr; /* mobile */
     }
-    .balRow{
-      display:flex;
-      align-items:baseline;
-      justify-content:flex-start;
-      gap:12px;
-      margin: 8px 0;
-      font-size: 18px;
+    @media (min-width: 720px){
+      .balGrid{ grid-template-columns: repeat(3, 1fr); }
     }
-    .balLabel{
-      min-width: 120px;
+    .balBox{
+      padding: 14px 14px 12px;
+    }
+    .balTop{
       display:flex;
       align-items:center;
       gap:10px;
-      font-weight: 700;
-    }
-    .balAmt{
-      font-size: 34px;
       font-weight: 900;
-      letter-spacing: .2px;
+      letter-spacing:.2px;
     }
-    .yen{ font-size: 18px; font-weight: 800; margin-left:4px; color:var(--muted); }
+    .balPill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(17,24,39,.06);
+      border: 1px solid rgba(17,24,39,.10);
+      font-size: 13px;
+      font-weight: 900;
+    }
+    .balBig{
+      margin-top: 8px;
+      font-size: 38px;
+      font-weight: 1000;
+      line-height: 1;
+      letter-spacing:.2px;
+    }
+    .balBig .yen{
+      font-size: 18px;
+      margin-left: 4px;
+      color: var(--muted);
+      font-weight: 900;
+    }
+    .balDesc{
+      margin-top: 8px;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
 
     .section{
       margin-top: 16px;
@@ -116,14 +142,25 @@
       gap: 10px;
     }
 
+    /* IMPORTANT: prevent overflow in iPad/Safari grid */
+    .grid > div,
+    .row2 > div{ min-width: 0; }
+
     select,input,textarea{
       width:100%;
+      min-width:0;              /* prevent grid overflow */
+      max-width:100%;           /* prevent border spilling */
       font-size:16px;
       padding: 12px 14px;
       border-radius: 14px;
       border:1px solid var(--line);
       background:#fff;
       outline:none;
+    }
+    input[type="date"]{
+      -webkit-appearance: none;
+      appearance: none;
+      background-clip: padding-box;
     }
     textarea{ min-height: 46px; resize: vertical; }
 
@@ -180,7 +217,6 @@
       margin: 8px 0 0;
     }
 
-    /* List as cards ALWAYS */
     .listWrap{
       margin-top: 8px;
     }
@@ -256,13 +292,11 @@
       font-size: 14px;
     }
 
-    /* keep form nice on small screens */
     @media (max-width: 420px){
       .row2{ grid-template-columns: 1fr; }
-      .balAmt{ font-size: 30px; }
       .txTitle{ font-size: 20px; }
       .txAmt{ font-size: 24px; }
-      .balLabel{ min-width: 110px; }
+      .balBig{ font-size: 34px; }
     }
   </style>
 </head>
@@ -280,18 +314,24 @@
       </div>
     </div>
 
-    <div class="card balances" id="balCard">
-      <div class="balRow">
-        <div class="balLabel">💰 Save:</div>
-        <div><span class="balAmt" id="balSave">0</span><span class="yen">¥</span></div>
+    <!-- NEW balances layout -->
+    <div class="balGrid">
+      <div class="card balBox">
+        <div class="balTop"><span class="balPill">💰 SAVE 储蓄</span></div>
+        <div class="balBig">¥<span id="balSave">0</span><span class="yen"></span></div>
+        <div class="balDesc">给未来的你（初中后再讨论用途也 OK）</div>
       </div>
-      <div class="balRow">
-        <div class="balLabel">🎁 Wish:</div>
-        <div><span class="balAmt" id="balWish">0</span><span class="yen">¥</span></div>
+
+      <div class="card balBox">
+        <div class="balTop"><span class="balPill">🎁 WISH 愿望</span></div>
+        <div class="balBig">¥<span id="balWish">0</span><span class="yen"></span></div>
+        <div class="balDesc">大愿望/礼物：可以和父母一起出</div>
       </div>
-      <div class="balRow">
-        <div class="balLabel">❤️ Give:</div>
-        <div><span class="balAmt" id="balGive">0</span><span class="yen">¥</span></div>
+
+      <div class="card balBox">
+        <div class="balTop"><span class="balPill">❤️ GIVE 帮助</span></div>
+        <div class="balBig">¥<span id="balGive">0</span><span class="yen"></span></div>
+        <div class="balDesc">捐赠/帮助他人：可以父母配比</div>
       </div>
     </div>
 
@@ -317,33 +357,35 @@
           </div>
         </div>
 
-        <div>
-          <label>金额（JPY）</label>
-          <input id="amount" inputmode="numeric" placeholder="例如 20000" />
+        <div class="row2">
+          <div>
+            <label>金额（JPY）</label>
+            <input id="amount" inputmode="numeric" placeholder="例如 20000" />
+          </div>
+          <div>
+            <label>日期</label>
+            <input id="date" type="date" />
+          </div>
         </div>
 
-        <div>
-          <label>日期</label>
-          <input id="date" type="date" />
-        </div>
-
-        <div>
-          <label>分类（可选）</label>
-          <select id="cat">
-            <option value="">（不选也可以）</option>
-            <option value="gift">礼物</option>
-            <option value="toy">玩具/乐高</option>
-            <option value="trip">旅行/纪念品</option>
-            <option value="donation">捐赠/帮助</option>
-            <option value="snack">零食/小吃</option>
-            <option value="stationery">文具</option>
-            <option value="other">其他</option>
-          </select>
-        </div>
-
-        <div>
-          <label>备注（可选）</label>
-          <input id="note" placeholder="例如：学校捐款 / 生日礼物 / 乐高出资" />
+        <div class="row2">
+          <div>
+            <label>分类（可选）</label>
+            <select id="cat">
+              <option value="">（不选也可以）</option>
+              <option value="gift">礼物</option>
+              <option value="toy">玩具/乐高</option>
+              <option value="trip">旅行/纪念品</option>
+              <option value="donation">捐赠/帮助</option>
+              <option value="snack">零食/小吃</option>
+              <option value="stationery">文具</option>
+              <option value="other">其他</option>
+            </select>
+          </div>
+          <div>
+            <label>备注（可选）</label>
+            <input id="note" placeholder="例如：学校捐款 / 生日礼物 / 乐高出资" />
+          </div>
         </div>
 
         <div class="btnRow">
