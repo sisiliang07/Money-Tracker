@@ -227,7 +227,7 @@
             <th style="min-width:110px">日期</th>
             <th style="min-width:110px">账户</th>
             <th style="min-width:90px">类型</th>
-            <th class="right" style="min-width:120px">金额</th>
+            <th class="right" style="min-width:160px">金额</th>
             <th style="min-width:120px">分类</th>
             <th style="min-width:180px">备注</th>
             <th class="right" style="min-width:150px">操作</th>
@@ -357,7 +357,7 @@
         <td>${t.date}</td>
         <td><span class="tag">${acctName(t.acct)}</span></td>
         <td>${isOut ? "➖ 支出" : "➕ 存入"}</td>
-        <td class="right ${amtClass}">${sign}${yen(Number(t.amount)||0)}</td>
+        <td class="right style="min-width:160px" ${amtClass}">${sign}${yen(Number(t.amount)||0)}</td>
         <td><span class="tag">${catName(t.cat)}</span></td>
         <td>${escapeHtml(t.note || "")}</td>
         <td class="right">
